@@ -10,21 +10,20 @@ import {
   UseInterceptors,
 } from '@nestjs/common'
 import { UserService } from './user.service'
-import { DatabaseService } from 'modules/database/database.service'
 import { AuthGuard } from '@nestjs/passport'
 import { GetCurrentUserById } from 'utils/get-user-by-id.decorator'
 import { UserDto } from './dto/user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { UpdatePasswordDto } from './dto/update-password.dto'
+import * as admin from 'firebase-admin'
 
 @ApiTags('user')
 @Controller('user')
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    private prisma: DatabaseService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
+
+  private firestore = admin.firestore()
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user' })
@@ -34,10 +33,14 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ClassSerializerInterceptor)
   async findCurrentUser(@GetCurrentUserById() userId: string): Promise<UserDto> {
-    return this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, firstName: true, lastName: true },
-    })
+    const userDoc = await this.firestore.collection('users').doc(userId).get()
+
+    return {
+      id: userDoc.id,
+      email: userDoc.data().userData.email,
+      firstName: userDoc.data().userData.firstName,
+      lastName: userDoc.data().userData.lastName,
+    } as UserDto
   }
 
   @ApiBearerAuth()

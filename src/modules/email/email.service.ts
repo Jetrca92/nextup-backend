@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
 import { EnvVars } from 'common/constants/env-vars.constant'
-import { DatabaseService } from 'modules/database/database.service'
 import * as nodemailer from 'nodemailer'
 
 @Injectable()
@@ -10,7 +9,6 @@ export class EmailService {
   private nodemailerTransport: nodemailer.Transporter
 
   constructor(
-    private prisma: DatabaseService,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {

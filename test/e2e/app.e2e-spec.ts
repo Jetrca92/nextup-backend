@@ -1,12 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { INestApplication } from '@nestjs/common'
+import { INestApplication, ValidationPipe } from '@nestjs/common'
 import * as request from 'supertest'
-import { DatabaseService } from '../../src/modules/database/database.service'
 import { AppModule } from '../../src/modules/app.module'
-
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
 describe('AppController (e2e)', () => {
   let app: INestApplication
-  let databaseService: DatabaseService
   let userToken: string
 
   beforeAll(async () => {
@@ -14,13 +12,26 @@ describe('AppController (e2e)', () => {
       imports: [AppModule],
     }).compile()
 
-    app = moduleFixture.createNestApplication()
-    databaseService = moduleFixture.get(DatabaseService)
+    app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter())
+
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+
+    app.enableCors({
+      origin: ['http://localhost:3000'],
+      credentials: true,
+      allowedHeaders: 'Authorization, Content-Type',
+    })
+
     await app.init()
   })
 
   afterAll(async () => {
-    await databaseService.user.deleteMany()
     await app.close()
   })
 
