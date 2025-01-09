@@ -9,6 +9,7 @@ import { DatabaseModule } from './database/database.module'
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: `.env.${process.env.STAGE || 'development'}`,
     }),
     DatabaseModule,
     AuthModule,

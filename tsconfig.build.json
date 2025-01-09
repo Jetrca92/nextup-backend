@@ -1,10 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"],
-  "compilerOptions": {
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "strict": true,
-  },
-  "include": ["firebase-service-account.json"]
+  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
 }

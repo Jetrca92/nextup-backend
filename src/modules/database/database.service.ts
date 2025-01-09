@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { Firestore } from '@google-cloud/firestore'
 
 @Injectable()
 export class DatabaseService {
-  constructor(private readonly firestore: Firestore) {}
+  constructor(@Inject('FIRESTORE') private readonly firestore: Firestore) {}
 
   getCollection(collectionName: string) {
     return this.firestore.collection(collectionName)

@@ -23,6 +23,7 @@
     "test:unit": "cross-env STAGE=dev jest --no-cache --config ./test/jest-unit.json"
   },
   "dependencies": {
+    "@fastify/static": "^7.0.4",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.3",
     "@nestjs/core": "^10.0.0",

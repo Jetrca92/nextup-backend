@@ -5,16 +5,14 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { EnvVars } from 'common/constants/env-vars.constant'
 import { JwtPayloadDto } from 'modules/auth/dto/jwt-payload.dto'
 import { ConfigService } from '@nestjs/config'
-import { Firestore } from '@google-cloud/firestore'
 import { UserFirestore } from '../dto/user-firestore.dto'
 import { UserDto } from 'modules/user/dto/user.dto'
+import { DatabaseService } from 'modules/database/database.service'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  private usersCollection
-
   constructor(
-    private readonly firestore: Firestore,
+    private readonly databaseService: DatabaseService,
     configService: ConfigService,
   ) {
     super({
@@ -22,26 +20,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ignoreExpiration: false,
       secretOrKey: configService.get(EnvVars.JWT_SECRET),
     })
-    this.usersCollection = firestore.collection('users')
   }
 
   async validate(payload: JwtPayloadDto): Promise<UserDto> {
-    const userRef = this.usersCollection.doc(payload.sub)
-    const userSnapshot = await userRef.get()
+    const user = await this.databaseService.findOneById<UserFirestore>('users', payload.sub)
 
-    if (!userSnapshot.exists) {
+    if (!user) {
       throw new NotFoundException(`User not found`)
     }
-
-    const userData = userSnapshot.data() as UserFirestore
-    const user: UserDto = {
-      id: userRef.id,
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      avatarUrl: userData.avatarUrl,
-    }
-
-    return user
+    return user as UserDto
   }
 }

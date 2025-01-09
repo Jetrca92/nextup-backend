@@ -10,6 +10,7 @@ import { UserService } from 'modules/user/user.service'
 import googleOauthConfig from './config/google-oauth.config'
 import { GoogleStrategy } from './strategies/google.strategy'
 import { EmailService } from 'modules/email/email.service'
+import { DatabaseService } from 'modules/database/database.service'
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { EmailService } from 'modules/email/email.service'
     }),
     DatabaseModule,
   ],
-  providers: [AuthService, JwtStrategy, UserService, GoogleStrategy, EmailService],
+  providers: [AuthService, JwtStrategy, UserService, GoogleStrategy, EmailService, DatabaseService],
   controllers: [AuthController],
 })
 export class AuthModule {}
