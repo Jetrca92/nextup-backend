@@ -110,3 +110,4 @@ next-env.d.ts
 .vscode
 
 firebase-service-account.json
+firebase-test-service-account.json

@@ -46,4 +46,22 @@ export class DatabaseService {
   async deleteDocument(collectionName: string, id: string) {
     await this.firestore.collection(collectionName).doc(id).delete()
   }
+
+  async deleteDocuments(collectionName: string) {
+    const collectionRef = this.firestore.collection(collectionName)
+    const snapshot = await collectionRef.get()
+
+    if (snapshot.empty) {
+      throw new Error('No documents found to delete.')
+    }
+
+    const batch = this.firestore.batch()
+
+    snapshot.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+
+    await batch.commit()
+    console.log(`${snapshot.size} documents deleted from ${collectionName}.`)
+  }
 }

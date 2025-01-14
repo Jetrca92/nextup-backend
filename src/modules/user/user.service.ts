@@ -25,7 +25,8 @@ export class UserService {
         password: createUserDto.password,
         firstName: createUserDto.firstName,
         lastName: createUserDto.lastName,
-        avatarUrl: createUserDto.avatarUrl,
+        avatarUrl: createUserDto.avatarUrl || null,
+        events: null,
       }
 
       const newUserId = await this.databaseService.addDocument('users', newUser)
