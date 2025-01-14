@@ -5,9 +5,9 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { EnvVars } from 'common/constants/env-vars.constant'
 import { JwtPayloadDto } from 'modules/auth/dto/jwt-payload.dto'
 import { ConfigService } from '@nestjs/config'
-import { UserFirestore } from '../dto/user-firestore.dto'
 import { UserDto } from 'modules/user/dto/user.dto'
 import { DatabaseService } from 'modules/database/database.service'
+import { User } from 'models/user.model'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -23,7 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayloadDto): Promise<UserDto> {
-    const user = await this.databaseService.findOneById<UserFirestore>('users', payload.sub)
+    const user = await this.databaseService.findOneById<User>('users', payload.sub)
 
     if (!user) {
       throw new NotFoundException(`User not found`)

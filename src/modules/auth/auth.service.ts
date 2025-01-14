@@ -6,8 +6,8 @@ import { UserDto } from '../user/dto/user.dto'
 import { UserRegisterDto } from './dto/user-register.dto'
 import { UserService } from 'modules/user/user.service'
 import { EmailService } from 'modules/email/email.service'
-import { UserFirestore } from './dto/user-firestore.dto'
 import { DatabaseService } from 'modules/database/database.service'
+import { User } from 'models/user.model'
 
 @Injectable()
 export class AuthService {
@@ -35,7 +35,7 @@ export class AuthService {
   }
 
   async validateUser(email: string, password: string) {
-    const user = await this.databaseService.findOneByField<UserFirestore>('users', 'email', email)
+    const user = await this.databaseService.findOneByField<User>('users', 'email', email)
 
     if (!user) {
       Logger.warn(`User with email ${email} not found`)
@@ -53,7 +53,7 @@ export class AuthService {
   }
 
   async validateGoogleUser(googleUser: UserRegisterDto): Promise<UserDto> {
-    const user = await this.databaseService.findOneByField<UserFirestore>('users', 'email', googleUser.email)
+    const user = await this.databaseService.findOneByField<User>('users', 'email', googleUser.email)
 
     if (!user) {
       const hashedPassword = await bcrypt.hash(googleUser.password, 10)
@@ -66,7 +66,7 @@ export class AuthService {
   }
 
   async forgotPassword(id: string): Promise<void> {
-    const user = await this.databaseService.findOneById<UserFirestore>('users', id)
+    const user = await this.databaseService.findOneById<User>('users', id)
 
     if (!user) {
       Logger.warn(`No user found with id: ${id}`)

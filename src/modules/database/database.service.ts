@@ -33,8 +33,14 @@ export class DatabaseService {
     return docRef.id
   }
 
-  async updateDocument(collectionName: string, id: string, data: any) {
-    await this.firestore.collection(collectionName).doc(id).update(data)
+  async updateDocument<T>(collectionName: string, id: string, data: Partial<T>) {
+    const documentRef = await this.firestore.collection(collectionName).doc(id)
+    await documentRef.update(data)
+    const updatedDoc = await documentRef.get()
+    if (!updatedDoc.exists) {
+      throw new Error(`Document with ID ${id} does not exist in ${collectionName}.`)
+    }
+    return { id: documentRef.id, ...(updatedDoc.data() as T) }
   }
 
   async deleteDocument(collectionName: string, id: string) {

@@ -5,14 +5,14 @@ import { UpdateUserDto } from './dto/update-user.dto'
 import { UpdatePasswordDto } from './dto/update-password.dto'
 import * as bcrypt from 'utils/bcrypt'
 import { DatabaseService } from 'modules/database/database.service'
-import { UserFirestore } from 'modules/auth/dto/user-firestore.dto'
+import { User } from 'models/user.model'
 
 @Injectable()
 export class UserService {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async create(createUserDto: UserRegisterDto): Promise<UserDto> {
-    const user = await this.databaseService.findOneByField<UserFirestore>('users', 'email', createUserDto.email)
+    const user = await this.databaseService.findOneByField<User>('users', 'email', createUserDto.email)
 
     if (user) {
       Logger.warn('User with that email already exists')
@@ -20,7 +20,7 @@ export class UserService {
     }
 
     try {
-      const newUser = {
+      const newUser: Omit<User, 'id' | 'createdAt' | 'updatedAt'> = {
         email: createUserDto.email,
         password: createUserDto.password,
         firstName: createUserDto.firstName,
@@ -39,7 +39,7 @@ export class UserService {
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<UserDto> {
-    const user = await this.databaseService.findOneById<UserFirestore>('users', id)
+    const user = await this.databaseService.findOneById<User>('users', id)
 
     if (!user) {
       Logger.warn(`User with ID ${id} not found.`)
@@ -58,10 +58,10 @@ export class UserService {
     }
 
     try {
-      await this.databaseService.updateDocument('users', id, updates)
-      const updatedUser = { id, user, ...updates } as UserDto
+      const updatedUser = await this.databaseService.updateDocument<User>('users', id, updates)
       Logger.log(`User updated successfully for user ID ${id}.`)
-      return updatedUser
+      delete updatedUser.password
+      return updatedUser as UserDto
     } catch (error) {
       Logger.error(error)
       throw new InternalServerErrorException('Failed to update user.')
@@ -69,7 +69,7 @@ export class UserService {
   }
 
   async updatePassword(id: string, updatePasswordDto: UpdatePasswordDto): Promise<UserDto> {
-    const user = await this.databaseService.findOneById<UserFirestore>('users', id)
+    const user = await this.databaseService.findOneById<User>('users', id)
 
     if (!user) {
       Logger.warn(`User with ID ${id} not found.`)
