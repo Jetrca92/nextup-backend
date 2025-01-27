@@ -11,5 +11,6 @@ export interface Event {
   location: string
   startDateTime: Timestamp
   maximumUsers: number
+  ownerId: string
   attendees?: User[]
 }

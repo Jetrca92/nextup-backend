@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { Firestore } from '@google-cloud/firestore'
+import * as admin from 'firebase-admin'
 
 @Injectable()
 export class DatabaseService {
@@ -29,17 +30,30 @@ export class DatabaseService {
   }
 
   async addDocument(collectionName: string, data: any) {
-    const docRef = await this.firestore.collection(collectionName).add(data)
+    const timestamp = admin.firestore.FieldValue.serverTimestamp()
+    const docWithTimestamps = {
+      ...data,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    }
+    const docRef = await this.firestore.collection(collectionName).add(docWithTimestamps)
     return docRef.id
   }
 
   async updateDocument<T>(collectionName: string, id: string, data: Partial<T>) {
-    const documentRef = await this.firestore.collection(collectionName).doc(id)
-    await documentRef.update(data)
-    const updatedDoc = await documentRef.get()
-    if (!updatedDoc.exists) {
+    const timestamp = admin.firestore.FieldValue.serverTimestamp()
+    const docWithTimestamp = {
+      ...data,
+      updatedAt: timestamp,
+    }
+    const documentRef = this.firestore.collection(collectionName).doc(id)
+    const docSnapshot = await documentRef.get()
+    if (!docSnapshot.exists) {
       throw new Error(`Document with ID ${id} does not exist in ${collectionName}.`)
     }
+
+    await documentRef.update(docWithTimestamp)
+    const updatedDoc = await documentRef.get()
     return { id: documentRef.id, ...(updatedDoc.data() as T) }
   }
 

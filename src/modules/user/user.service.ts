@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common'
 import { UserRegisterDto } from 'modules/auth/dto/user-register.dto'
 import { UserDto } from 'modules/user/dto/user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
@@ -30,9 +36,15 @@ export class UserService {
       }
 
       const newUserId = await this.databaseService.addDocument('users', newUser)
-      delete newUser.password
       Logger.log(`User successfully created for email ${createUserDto.email}`)
-      return { id: newUserId, ...newUser } as UserDto
+      const userDto: UserDto = {
+        id: newUserId,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        avatarUrl: newUser.avatarUrl,
+      }
+      return userDto
     } catch (error) {
       Logger.error(error)
       throw new InternalServerErrorException('Something went wrong while creating a new user.')
@@ -61,8 +73,14 @@ export class UserService {
     try {
       const updatedUser = await this.databaseService.updateDocument<User>('users', id, updates)
       Logger.log(`User updated successfully for user ID ${id}.`)
-      delete updatedUser.password
-      return updatedUser as UserDto
+      const userDto: UserDto = {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        avatarUrl: updatedUser.avatarUrl,
+      }
+      return userDto
     } catch (error) {
       Logger.error(error)
       throw new InternalServerErrorException('Failed to update user.')
@@ -95,12 +113,36 @@ export class UserService {
 
     try {
       await this.databaseService.updateDocument('users', id, { password: hashedNewPassword })
-      const updatedUser = { id, ...user, password: hashedNewPassword } as UserDto
+      const userDto: UserDto = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatarUrl: user.avatarUrl,
+      }
       Logger.log(`Password updated successfully for user ID ${id}.`)
-      return updatedUser
+      return userDto
     } catch (error) {
       Logger.error(error)
       throw new InternalServerErrorException('Failed to update password.')
     }
+  }
+
+  async getUserById(userId: string): Promise<UserDto> {
+    const user = await this.databaseService.findOneById<User>('users', userId)
+
+    if (!user) {
+      Logger.warn(`User with ID ${userId} not found.`)
+      throw new NotFoundException('User not found.')
+    }
+
+    const userDto: UserDto = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatarUrl: user.avatarUrl,
+    }
+    return userDto
   }
 }

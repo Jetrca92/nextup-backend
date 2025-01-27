@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Req, Res } from '@nestjs/common'
+import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { UserLoginDto } from './dto/user-login.dto'
 import { UserDto } from '../user/dto/user.dto'
@@ -9,6 +9,7 @@ import { EnvVars } from 'common/constants/env-vars.constant'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { AuthGuard } from '@nestjs/passport'
 import { GetCurrentUserById } from 'utils/get-user-by-id.decorator'
+import { FastifyReply } from 'fastify'
 
 @ApiTags('auth')
 @Controller('auth')
@@ -43,7 +44,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Google login callback' })
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
-  async googleCallback(@Req() req, @Res() res) {
+  async googleCallback(@Req() req: any, res: FastifyReply) {
     const { access_token } = await this.authService.login(req.user)
     const baseUrl = this.configService.get<string>(EnvVars.DATABASE_HOST)
     return res.redirect(`http://${baseUrl}:8080/dashboard?token=${access_token}`)

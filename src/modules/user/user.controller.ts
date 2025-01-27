@@ -1,12 +1,10 @@
 import {
-  BadRequestException,
   Body,
   ClassSerializerInterceptor,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Patch,
   UseGuards,
   UseInterceptors,
@@ -18,19 +16,11 @@ import { UserDto } from './dto/user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { UpdatePasswordDto } from './dto/update-password.dto'
-import * as admin from 'firebase-admin'
-import { DatabaseService } from 'modules/database/database.service'
-import { User } from 'models/user.model'
 
 @ApiTags('user')
 @Controller('user')
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    private readonly databaseService: DatabaseService,
-  ) {}
-
-  private firestore = admin.firestore()
+  constructor(private readonly userService: UserService) {}
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user' })
@@ -40,13 +30,7 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ClassSerializerInterceptor)
   async findCurrentUser(@GetCurrentUserById() userId: string): Promise<UserDto> {
-    const user = await this.databaseService.findOneById<User>('users', userId)
-    if (!user) {
-      Logger.warn(`User with ID ${userId} not found.`)
-      throw new BadRequestException('User not found.')
-    }
-    delete user.password
-    return user as UserDto
+    return this.userService.getUserById(userId)
   }
 
   @ApiBearerAuth()
