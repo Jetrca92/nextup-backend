@@ -12,13 +12,18 @@ import { UpdatePasswordDto } from './dto/update-password.dto'
 import * as bcrypt from 'utils/bcrypt'
 import { DatabaseService } from 'modules/database/database.service'
 import { User } from 'models/user.model'
+import { DatabaseCollections } from 'common/constants/firebase-vars.constant'
 
 @Injectable()
 export class UserService {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async create(createUserDto: UserRegisterDto): Promise<UserDto> {
-    const user = await this.databaseService.findOneByField<User>('users', 'email', createUserDto.email)
+    const user = await this.databaseService.findOneByField<User>(
+      DatabaseCollections.USERS,
+      'email',
+      createUserDto.email,
+    )
 
     if (user) {
       Logger.warn('User with that email already exists')
@@ -35,7 +40,7 @@ export class UserService {
         events: null,
       }
 
-      const newUserId = await this.databaseService.addDocument('users', newUser)
+      const newUserId = await this.databaseService.addDocument(DatabaseCollections.USERS, newUser)
       Logger.log(`User successfully created for email ${createUserDto.email}`)
       const userDto: UserDto = {
         id: newUserId,
@@ -52,7 +57,7 @@ export class UserService {
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<UserDto> {
-    const user = await this.databaseService.findOneById<User>('users', id)
+    const user = await this.databaseService.findOneById<User>(DatabaseCollections.USERS, id)
 
     if (!user) {
       Logger.warn(`User with ID ${id} not found.`)
@@ -71,7 +76,7 @@ export class UserService {
     }
 
     try {
-      const updatedUser = await this.databaseService.updateDocument<User>('users', id, updates)
+      const updatedUser = await this.databaseService.updateDocument<User>(DatabaseCollections.USERS, id, updates)
       Logger.log(`User updated successfully for user ID ${id}.`)
       const userDto: UserDto = {
         id: updatedUser.id,
@@ -88,7 +93,7 @@ export class UserService {
   }
 
   async updatePassword(id: string, updatePasswordDto: UpdatePasswordDto): Promise<UserDto> {
-    const user = await this.databaseService.findOneById<User>('users', id)
+    const user = await this.databaseService.findOneById<User>(DatabaseCollections.USERS, id)
 
     if (!user) {
       Logger.warn(`User with ID ${id} not found.`)
@@ -112,7 +117,7 @@ export class UserService {
     }
 
     try {
-      await this.databaseService.updateDocument('users', id, { password: hashedNewPassword })
+      await this.databaseService.updateDocument(DatabaseCollections.USERS, id, { password: hashedNewPassword })
       const userDto: UserDto = {
         id: user.id,
         email: user.email,
@@ -129,7 +134,7 @@ export class UserService {
   }
 
   async getUserById(userId: string): Promise<UserDto> {
-    const user = await this.databaseService.findOneById<User>('users', userId)
+    const user = await this.databaseService.findOneById<User>(DatabaseCollections.USERS, userId)
 
     if (!user) {
       Logger.warn(`User with ID ${userId} not found.`)

@@ -58,6 +58,11 @@ export class DatabaseService {
   }
 
   async deleteDocument(collectionName: string, id: string) {
+    const documentRef = this.firestore.collection(collectionName).doc(id)
+    const docSnapshot = await documentRef.get()
+    if (!docSnapshot.exists) {
+      throw new Error(`Document with ID ${id} does not exist in ${collectionName}.`)
+    }
     await this.firestore.collection(collectionName).doc(id).delete()
   }
 

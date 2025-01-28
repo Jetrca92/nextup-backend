@@ -25,6 +25,10 @@ export class CreateEventDto {
   })
   startDateTime: Timestamp
 
+  @ApiProperty({
+    example: 1000,
+    description: 'Maximum users attending',
+  })
   @IsNumber()
   @Min(1)
   maximumUsers: number
