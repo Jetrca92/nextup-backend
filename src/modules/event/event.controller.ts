@@ -1,9 +1,27 @@
-import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common'
+import {
+  Body,
+  ClassSerializerInterceptor,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common'
 import { EventService } from './event.service'
 import { DatabaseService } from 'modules/database/database.service'
-import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { EventDto } from './dto/event.dto'
+import { AuthGuard } from '@nestjs/passport'
+import { GetCurrentUserById } from 'utils/get-user-by-id.decorator'
+import { CreateEventDto } from './dto/create-event.dto'
+import { UpdateEventDto } from './dto/update-event.dto'
 
+@ApiTags('event')
 @Controller('event')
 export class EventController {
   constructor(
@@ -19,5 +37,82 @@ export class EventController {
     const eventsSnapshot = await this.databaseService.getCollection('events').orderBy('startDateTime', 'asc').get()
     const events = eventsSnapshot.docs.map((doc) => doc.data() as EventDto)
     return events
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Return a list of user events' })
+  @ApiResponse({ status: 200, description: 'List of latest user events', type: [EventDto] })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/user-events')
+  @HttpCode(HttpStatus.OK)
+  async getUserEvents(@GetCurrentUserById() userId: string): Promise<EventDto[]> {
+    return this.eventService.getEventByUserId(userId)
+  }
+
+  @ApiOperation({ summary: 'Return an event based on id' })
+  @ApiResponse({ status: 200, description: 'Event', type: EventDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiParam({
+    name: 'eventId',
+    description: 'The ID of the event',
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @Get('/event/:eventId')
+  @HttpCode(HttpStatus.OK)
+  async getEventById(@Param('eventId') eventId: string): Promise<EventDto> {
+    return this.eventService.getEventById(eventId)
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a new event' })
+  @ApiResponse({ status: 201, description: 'Event successfully created' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 400, description: 'Invalid input data.' })
+  @UseGuards(AuthGuard('jwt'))
+  @Post('')
+  @HttpCode(HttpStatus.CREATED)
+  async addEvent(@GetCurrentUserById() userId: string, @Body() eventDto: CreateEventDto): Promise<EventDto> {
+    return this.eventService.createEvent(eventDto, userId)
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update event information' })
+  @ApiResponse({ status: 200, description: 'Updated event', type: EventDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiParam({
+    name: 'eventId',
+    description: 'The ID of the event',
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('/event/:eventId')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(ClassSerializerInterceptor)
+  async updateLocation(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserById() userId: string,
+    @Body() updateEventDto: UpdateEventDto,
+  ): Promise<EventDto> {
+    return this.eventService.updateEvent(userId, eventId, updateEventDto)
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete event' })
+  @ApiResponse({ status: 200, description: 'Deleted event' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiParam({
+    name: 'eventId',
+    description: 'The ID of the event',
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('/event/:eventId')
+  @HttpCode(HttpStatus.OK)
+  async deleteEvent(@Param('eventId') eventId: string, @GetCurrentUserById() userId: string): Promise<EventDto> {
+    return this.eventService.deleteEvent(eventId, userId)
   }
 }

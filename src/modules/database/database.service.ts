@@ -29,6 +29,16 @@ export class DatabaseService {
     return { id: doc.id, ...(doc.data() as T) }
   }
 
+  async findEventsByUserId<T>(userId: string) {
+    const snapshot = await this.firestore.collection('events').where('ownerId', '==', userId).get()
+
+    if (snapshot.empty) {
+      return []
+    }
+
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() as T) }))
+  }
+
   async addDocument(collectionName: string, data: any) {
     const timestamp = admin.firestore.FieldValue.serverTimestamp()
     const docWithTimestamps = {

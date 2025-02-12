@@ -66,12 +66,17 @@ export class EventService {
     }
   }
 
-  async updateEvent(eventId: string, updateEventDto: UpdateEventDto): Promise<EventDto> {
+  async updateEvent(userId: string, eventId: string, updateEventDto: UpdateEventDto): Promise<EventDto> {
     if (!eventId) {
       Logger.log('Event ID must be provided in order to update event')
       throw new BadRequestException('Event ID not provided')
     }
 
+    const event = await this.findOne(eventId)
+    if (event.ownerId !== userId) {
+      Logger.warn('You are not the owner of the event.')
+      throw new UnauthorizedException('You are not the owner.')
+    }
     const updates: Partial<EventDto> = {}
 
     if (updateEventDto.description) updates.description = updateEventDto.description
@@ -120,5 +125,9 @@ export class EventService {
   async getEventById(eventId: string): Promise<EventDto> {
     const event = await this.findOne(eventId)
     return this.toEventDto(event)
+  }
+
+  async getEventByUserId(userId: string): Promise<EventDto[]> {
+    return this.databaseService.findEventsByUserId<Event>(userId)
   }
 }
