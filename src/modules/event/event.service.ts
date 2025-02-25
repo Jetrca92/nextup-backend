@@ -12,6 +12,7 @@ import { EventDto } from './dto/event.dto'
 import { Event } from 'models/event.model'
 import { UpdateEventDto } from './dto/update-event.dto'
 import { DatabaseCollections } from 'common/constants/firebase-vars.constant'
+import { Timestamp } from '@google-cloud/firestore'
 
 @Injectable()
 export class EventService {
@@ -46,13 +47,17 @@ export class EventService {
       Logger.warn('UserId not provided while creating a new event.')
       throw new UnauthorizedException('User must be authenticated to create a new event.')
     }
+    const { startDateTime, ...rest } = eventDto
+
+    const firestoreTimestamp = new Timestamp(startDateTime.seconds, startDateTime.nanoseconds)
+
     try {
       const newEvent: Omit<Event, 'id' | 'createdAt' | 'updatedAt'> = {
         imageUrl: null,
         title: eventDto.title,
         description: eventDto.description,
         location: eventDto.location,
-        startDateTime: eventDto.startDateTime,
+        startDateTime: firestoreTimestamp,
         maximumUsers: eventDto.maximumUsers,
         ownerId: userId,
       }
@@ -77,12 +82,16 @@ export class EventService {
       Logger.warn('You are not the owner of the event.')
       throw new UnauthorizedException('You are not the owner.')
     }
-    const updates: Partial<EventDto> = {}
+    const updates: Partial<Event> = {}
+    const { startDateTime, ...rest } = updateEventDto
+    if (startDateTime) {
+      const firestoreTimestamp = new Timestamp(startDateTime.seconds, startDateTime.nanoseconds)
+      updates.startDateTime = firestoreTimestamp
+    }
 
     if (updateEventDto.description) updates.description = updateEventDto.description
     if (updateEventDto.location) updates.location = updateEventDto.location
     if (updateEventDto.maximumUsers) updates.maximumUsers = updateEventDto.maximumUsers
-    if (updateEventDto.startDateTime) updates.startDateTime = updateEventDto.startDateTime
     if (updateEventDto.title) updates.title = updateEventDto.title
 
     if (Object.keys(updates).length === 0) {

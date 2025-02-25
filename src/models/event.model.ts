@@ -1,5 +1,5 @@
-import { Timestamp } from '@google-cloud/firestore'
 import { User } from './user.model'
+import { Timestamp } from '@google-cloud/firestore'
 
 export interface Event {
   id: string

@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNumber, IsOptional, IsString, Min } from 'class-validator'
+import { IsNumber, IsObject, IsOptional, IsString, Min, ValidateNested } from 'class-validator'
 import { User } from 'models/user.model'
-import { Timestamp } from '@google-cloud/firestore'
 
 export class EventDto {
   @ApiProperty({
@@ -35,7 +34,9 @@ export class EventDto {
     example: { seconds: 1672531200, nanoseconds: 0 },
     description: 'Start date and time of the event as a Firestore Timestamp',
   })
-  startDateTime: Timestamp
+  @ValidateNested()
+  @IsObject()
+  startDateTime: { seconds: number; nanoseconds: number }
 
   @IsNumber()
   @Min(1)

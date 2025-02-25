@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config'
 import { EmailModule } from './email/email.module'
 import { UserModule } from './user/user.module'
 import { DatabaseModule } from './database/database.module'
+import { EventModule } from './event/event.module'
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { DatabaseModule } from './database/database.module'
     AuthModule,
     EmailModule,
     UserModule,
+    EventModule,
   ],
   controllers: [],
   providers: [],
