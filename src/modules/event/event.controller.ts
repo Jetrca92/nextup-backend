@@ -21,8 +21,8 @@ import { GetCurrentUserById } from 'utils/get-user-by-id.decorator'
 import { CreateEventDto } from './dto/create-event.dto'
 import { UpdateEventDto } from './dto/update-event.dto'
 
-@ApiTags('event')
-@Controller('event')
+@ApiTags('events')
+@Controller('events')
 export class EventController {
   constructor(
     private readonly eventService: EventService,
@@ -52,13 +52,13 @@ export class EventController {
 
   @ApiOperation({ summary: 'Return an event based on id' })
   @ApiResponse({ status: 200, description: 'Event', type: EventDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiParam({
     name: 'eventId',
     description: 'The ID of the event',
     type: String,
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
+  @UseGuards(AuthGuard('jwt'))
   @Get('/event/:eventId')
   @HttpCode(HttpStatus.OK)
   async getEventById(@Param('eventId') eventId: string): Promise<EventDto> {

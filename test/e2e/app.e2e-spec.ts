@@ -7,6 +7,9 @@ import { DatabaseService } from 'modules/database/database.service'
 import { User } from 'models/user.model'
 import { v4 as uuidv4 } from 'uuid'
 import * as bcrypt from 'utils/bcrypt'
+import { Event } from 'models/event.model'
+import * as admin from 'firebase-admin'
+import { DatabaseCollections } from 'common/constants/firebase-vars.constant'
 
 describe('AppController (e2e)', () => {
   let app: NestFastifyApplication
@@ -101,7 +104,7 @@ describe('AppController (e2e)', () => {
         avatarUrl: null,
         events: null,
       }
-      await databaseService.addDocument('users', newUser)
+      await databaseService.addDocument(DatabaseCollections.USERS, newUser)
 
       const res = await request(app.getHttpServer())
         .post('/auth/login')
@@ -111,7 +114,7 @@ describe('AppController (e2e)', () => {
     })
 
     afterAll(async () => {
-      await databaseService.deleteDocuments('users')
+      await databaseService.deleteDocuments(DatabaseCollections.USERS)
     })
 
     describe('Find current user', () => {
@@ -163,6 +166,79 @@ describe('AppController (e2e)', () => {
           .set('Authorization', `Bearer ${userToken}`)
           .send({ currentPassword: 'test123', newPassword: 'test1234' })
           .expect(400)
+      })
+    })
+  })
+
+  describe('Event', () => {
+    const uniqueUserId = uuidv4()
+    let userToken: string
+    let userId: string
+    let eventId: string
+
+    beforeAll(async () => {
+      const password = '123456'
+      const hashedPassword = await bcrypt.hash(password)
+      const newUser: Omit<User, 'id' | 'createdAt' | 'updatedAt'> = {
+        email: `${uniqueUserId}@example.com`,
+        password: hashedPassword,
+        firstName: 'test',
+        lastName: 'user',
+        avatarUrl: null,
+        events: null,
+      }
+      userId = await databaseService.addDocument(DatabaseCollections.USERS, newUser)
+
+      const timestamp = admin.firestore.FieldValue.serverTimestamp()
+      const newEvent: Omit<Event, 'id' | 'createdAt' | 'updatedAt'> = {
+        imageUrl: null,
+        title: 'Koncert',
+        description: 'Koncert ob obletnici testiranja',
+        location: 'VSC',
+        startDateTime: timestamp,
+        maximumUsers: 2,
+        ownerId: userId,
+        attendees: [],
+      }
+
+      eventId = await databaseService.addDocument(DatabaseCollections.EVENTS, newEvent)
+      console.log(eventId)
+      const res = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: `${uniqueUserId}@example.com`, password: password })
+        .expect(201)
+      userToken = res.body.access_token
+    })
+
+    afterAll(async () => {
+      await databaseService.deleteDocuments('users')
+    })
+
+    describe('Get events', () => {
+      it('/events (GET) should return a list of upcoming events', async () => {
+        return request(app.getHttpServer()).get('/events').set('Authorization', `Bearer ${userToken}`).expect(200)
+      })
+    })
+
+    describe('Get user events', () => {
+      it('/user-events (GET) should return a list of user events', async () => {
+        return request(app.getHttpServer())
+          .get('/events/user-events')
+          .set('Authorization', `Bearer ${userToken}`)
+          .expect(200)
+      })
+
+      it('/user-events (GET) should return error if unauthorized', () => {
+        return request(app.getHttpServer()).get('/events/user-events').expect(401)
+      })
+    })
+
+    describe('Get event by id', () => {
+      it('/event/:eventId (GET) should return event based on id', () => {
+        return request(app.getHttpServer())
+          .get(`/events/event/${eventId}`)
+          .set('Authorization', `Bearer ${userToken}`)
+          .expect(200)
       })
     })
   })

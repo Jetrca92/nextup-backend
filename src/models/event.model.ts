@@ -1,15 +1,15 @@
 import { User } from './user.model'
-import { Timestamp } from '@google-cloud/firestore'
+import { Timestamp, FieldValue } from '@google-cloud/firestore'
 
 export interface Event {
   id: string
-  createdAt: Timestamp
-  updatedAt: Timestamp
+  createdAt: Timestamp | FieldValue
+  updatedAt: Timestamp | FieldValue
   imageUrl: string
   title: string
   description: string
   location: string
-  startDateTime: Timestamp
+  startDateTime: Timestamp | FieldValue
   maximumUsers: number
   ownerId: string
   attendees?: User[]
