@@ -10,6 +10,7 @@ import * as bcrypt from 'utils/bcrypt'
 import { Event } from 'models/event.model'
 import * as admin from 'firebase-admin'
 import { DatabaseCollections } from 'common/constants/firebase-vars.constant'
+import { CreateEventDto } from 'modules/event/dto/create-event.dto'
 
 describe('AppController (e2e)', () => {
   let app: NestFastifyApplication
@@ -118,7 +119,7 @@ describe('AppController (e2e)', () => {
     })
 
     describe('Find current user', () => {
-      it('/user (GET) should get current user', async () => {
+      it('/user (GET) should get current user', () => {
         return request(app.getHttpServer()).get('/user').set('Authorization', `Bearer ${userToken}`).expect(200)
       })
 
@@ -215,30 +216,103 @@ describe('AppController (e2e)', () => {
     })
 
     describe('Get events', () => {
-      it('/events (GET) should return a list of upcoming events', async () => {
+      it('/events (GET) should return a list of upcoming events', () => {
         return request(app.getHttpServer()).get('/events').set('Authorization', `Bearer ${userToken}`).expect(200)
       })
     })
 
     describe('Get user events', () => {
-      it('/user-events (GET) should return a list of user events', async () => {
+      it('/events/user-events (GET) should return a list of user events', () => {
         return request(app.getHttpServer())
           .get('/events/user-events')
           .set('Authorization', `Bearer ${userToken}`)
           .expect(200)
       })
 
-      it('/user-events (GET) should return error if unauthorized', () => {
+      it('/events/user-events (GET) should return error if unauthorized', () => {
         return request(app.getHttpServer()).get('/events/user-events').expect(401)
       })
     })
 
     describe('Get event by id', () => {
-      it('/event/:eventId (GET) should return event based on id', () => {
+      it('/events/:eventId (GET) should return event based on id', () => {
         return request(app.getHttpServer())
           .get(`/events/event/${eventId}`)
           .set('Authorization', `Bearer ${userToken}`)
           .expect(200)
+      })
+    })
+
+    describe('Create a new event', () => {
+      const newEvent: CreateEventDto = {
+        title: 'Veselica',
+        description: 'Veselica ob obletnici gasilskega društva',
+        location: 'Gomilsko',
+        startDateTime: {
+          seconds: 1672531200,
+          nanoseconds: 0,
+        },
+        maximumUsers: 2000,
+      }
+
+      it('/events (POST) should create a new event', async () => {
+        return request(app.getHttpServer())
+          .post('/events')
+          .set('Authorization', `Bearer ${userToken}`)
+          .send(newEvent)
+          .expect(201)
+          .then((res) => {
+            expect(res.body.location).toBe('Gomilsko')
+          })
+      })
+
+      it('/events (POST) should return error if unauthorized', () => {
+        return request(app.getHttpServer()).post('/events').send(newEvent).expect(401)
+      })
+
+      it('/events (POST) should return error if invalid input data', () => {
+        return request(app.getHttpServer())
+          .post('/events')
+          .set('Authorization', `Bearer ${userToken}`)
+          .send({
+            title: 'Veselica',
+            startDateTime: {
+              seconds: 1672531200,
+              nanoseconds: 0,
+            },
+            maximumUsers: 2000,
+          })
+          .expect(400)
+      })
+    })
+
+    describe('Update event', () => {
+      it('/events/event/:eventId (PATCH) should update event', async () => {
+        return request(app.getHttpServer())
+          .patch(`/events/event/${eventId}`)
+          .set('Authorization', `Bearer ${userToken}`)
+          .send({ location: 'Updated' })
+          .expect(200)
+          .then((res) => {
+            expect(res.body.location).toBe('Updated')
+          })
+      })
+
+      it('/events/event/:eventId (PATCH) should return error if unauthorized', () => {
+        return request(app.getHttpServer()).patch(`/events/event/${eventId}`).send({ location: 'Updated' }).expect(401)
+      })
+    })
+
+    describe('Delete event', () => {
+      it('events/event/:eventId (DELETE) should delete event', () => {
+        return request(app.getHttpServer())
+          .delete(`/events/event/${eventId}`)
+          .set('Authorization', `Bearer ${userToken}`)
+          .expect(200)
+      })
+
+      it('events/event/:eventId (DELETE) should return error if unauthorized', () => {
+        return request(app.getHttpServer()).delete(`/events/event/${eventId}`).expect(401)
       })
     })
   })

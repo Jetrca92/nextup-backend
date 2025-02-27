@@ -47,7 +47,7 @@ export class EventService {
       Logger.warn('UserId not provided while creating a new event.')
       throw new UnauthorizedException('User must be authenticated to create a new event.')
     }
-    const { startDateTime, ...rest } = eventDto
+    const { startDateTime } = eventDto
 
     const firestoreTimestamp = new Timestamp(startDateTime.seconds, startDateTime.nanoseconds)
 
@@ -83,7 +83,7 @@ export class EventService {
       throw new UnauthorizedException('You are not the owner.')
     }
     const updates: Partial<Event> = {}
-    const { startDateTime, ...rest } = updateEventDto
+    const { startDateTime } = updateEventDto
     if (startDateTime) {
       const firestoreTimestamp = new Timestamp(startDateTime.seconds, startDateTime.nanoseconds)
       updates.startDateTime = firestoreTimestamp

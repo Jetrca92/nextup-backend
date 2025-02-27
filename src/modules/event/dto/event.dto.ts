@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { IsNumber, IsObject, IsOptional, IsString, Min, ValidateNested } from 'class-validator'
 import { User } from 'models/user.model'
 import { FieldValue } from '@google-cloud/firestore'
+
 export class EventDto {
   @ApiProperty({
     example: '550e8400-e29b-41d4-a716-446655440000',
