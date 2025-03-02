@@ -44,7 +44,7 @@ export class EventController {
   @ApiResponse({ status: 200, description: 'List of latest user events', type: [EventDto] })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(AuthGuard('jwt'))
-  @Get('/user-events')
+  @Get('user-events')
   @HttpCode(HttpStatus.OK)
   async getUserEvents(@GetCurrentUserById() userId: string): Promise<EventDto[]> {
     return this.eventService.getEventByUserId(userId)
@@ -59,7 +59,7 @@ export class EventController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @UseGuards(AuthGuard('jwt'))
-  @Get('/:eventId')
+  @Get(':eventId')
   @HttpCode(HttpStatus.OK)
   async getEventById(@Param('eventId') eventId: string): Promise<EventDto> {
     return this.eventService.getEventById(eventId)
@@ -88,7 +88,7 @@ export class EventController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @UseGuards(AuthGuard('jwt'))
-  @Patch('/:eventId')
+  @Patch(':eventId')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ClassSerializerInterceptor)
   async updateLocation(
@@ -110,7 +110,7 @@ export class EventController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @UseGuards(AuthGuard('jwt'))
-  @Delete('/:eventId')
+  @Delete(':eventId')
   @HttpCode(HttpStatus.OK)
   async deleteEvent(@Param('eventId') eventId: string, @GetCurrentUserById() userId: string): Promise<EventDto> {
     return this.eventService.deleteEvent(eventId, userId)

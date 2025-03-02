@@ -37,7 +37,7 @@ export class UserController {
   @ApiOperation({ summary: 'Update current user information' })
   @ApiResponse({ status: 200, description: 'The updated user', type: UserDto })
   @UseGuards(AuthGuard('jwt'))
-  @Patch('/update-user')
+  @Patch('update-user')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ClassSerializerInterceptor)
   async updateUser(@Body() updateUserDto: UpdateUserDto, @GetCurrentUserById() userId: string): Promise<UserDto> {
@@ -48,7 +48,7 @@ export class UserController {
   @ApiOperation({ summary: 'Update current user password' })
   @ApiResponse({ status: 200, description: 'The updated user', type: UserDto })
   @UseGuards(AuthGuard('jwt'))
-  @Patch('/update-password')
+  @Patch('update-password')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ClassSerializerInterceptor)
   async updatePassword(
