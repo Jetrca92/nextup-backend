@@ -237,7 +237,7 @@ describe('AppController (e2e)', () => {
     describe('Get event by id', () => {
       it('/events/:eventId (GET) should return event based on id', () => {
         return request(app.getHttpServer())
-          .get(`/events/event/${eventId}`)
+          .get(`/events/${eventId}`)
           .set('Authorization', `Bearer ${userToken}`)
           .expect(200)
       })
@@ -287,9 +287,9 @@ describe('AppController (e2e)', () => {
     })
 
     describe('Update event', () => {
-      it('/events/event/:eventId (PATCH) should update event', async () => {
+      it('/events/:eventId (PATCH) should update event', async () => {
         return request(app.getHttpServer())
-          .patch(`/events/event/${eventId}`)
+          .patch(`/events/${eventId}`)
           .set('Authorization', `Bearer ${userToken}`)
           .send({ location: 'Updated' })
           .expect(200)
@@ -298,21 +298,21 @@ describe('AppController (e2e)', () => {
           })
       })
 
-      it('/events/event/:eventId (PATCH) should return error if unauthorized', () => {
-        return request(app.getHttpServer()).patch(`/events/event/${eventId}`).send({ location: 'Updated' }).expect(401)
+      it('/events/:eventId (PATCH) should return error if unauthorized', () => {
+        return request(app.getHttpServer()).patch(`/events/${eventId}`).send({ location: 'Updated' }).expect(401)
       })
     })
 
     describe('Delete event', () => {
-      it('events/event/:eventId (DELETE) should delete event', () => {
+      it('events/:eventId (DELETE) should delete event', () => {
         return request(app.getHttpServer())
-          .delete(`/events/event/${eventId}`)
+          .delete(`/events/${eventId}`)
           .set('Authorization', `Bearer ${userToken}`)
           .expect(200)
       })
 
-      it('events/event/:eventId (DELETE) should return error if unauthorized', () => {
-        return request(app.getHttpServer()).delete(`/events/event/${eventId}`).expect(401)
+      it('events/:eventId (DELETE) should return error if unauthorized', () => {
+        return request(app.getHttpServer()).delete(`/events/${eventId}`).expect(401)
       })
     })
   })

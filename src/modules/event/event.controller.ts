@@ -59,7 +59,7 @@ export class EventController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @UseGuards(AuthGuard('jwt'))
-  @Get('/event/:eventId')
+  @Get('/:eventId')
   @HttpCode(HttpStatus.OK)
   async getEventById(@Param('eventId') eventId: string): Promise<EventDto> {
     return this.eventService.getEventById(eventId)
@@ -88,7 +88,7 @@ export class EventController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @UseGuards(AuthGuard('jwt'))
-  @Patch('/event/:eventId')
+  @Patch('/:eventId')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ClassSerializerInterceptor)
   async updateLocation(
@@ -110,7 +110,7 @@ export class EventController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @UseGuards(AuthGuard('jwt'))
-  @Delete('/event/:eventId')
+  @Delete('/:eventId')
   @HttpCode(HttpStatus.OK)
   async deleteEvent(@Param('eventId') eventId: string, @GetCurrentUserById() userId: string): Promise<EventDto> {
     return this.eventService.deleteEvent(eventId, userId)
