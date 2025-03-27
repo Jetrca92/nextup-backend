@@ -13,10 +13,14 @@ import { Event } from 'models/event.model'
 import { UpdateEventDto } from './dto/update-event.dto'
 import { DatabaseCollections } from 'common/constants/firebase-vars.constant'
 import { Timestamp } from '@google-cloud/firestore'
+import { FastifyRequest } from 'fastify'
+import { extname, join } from 'path'
+import { randomUUID } from 'crypto'
+import { createWriteStream, existsSync, mkdirSync } from 'fs'
 
 @Injectable()
 export class EventService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(private readonly databaseService: DatabaseService) { }
 
   private toEventDto(event: Event): EventDto {
     return {
@@ -93,6 +97,7 @@ export class EventService {
     if (updateEventDto.location) updates.location = updateEventDto.location
     if (updateEventDto.maximumUsers) updates.maximumUsers = updateEventDto.maximumUsers
     if (updateEventDto.title) updates.title = updateEventDto.title
+    if (updateEventDto.imageUrl) updates.imageUrl = updateEventDto.imageUrl
 
     if (Object.keys(updates).length === 0) {
       Logger.warn('No fields to update.')
@@ -111,6 +116,34 @@ export class EventService {
       Logger.error(error)
       throw new InternalServerErrorException('Failed to update event.')
     }
+  }
+
+  async updateEventImage(eventId: string, userId: string, req: FastifyRequest) {
+    const file = await req.file()
+    if (!file) throw new BadRequestException('File must be uploaded')
+
+    const ext = extname(file.filename).toLowerCase()
+    if (!['.jpg', '.jpeg', '.png'].includes(ext)) {
+      throw new BadRequestException('Only image files are allowed (jpg, jpeg, png)')
+    }
+
+    const uploadDir = join(__dirname, '../../files') // Adjusted for production
+    if (!existsSync(uploadDir)) {
+      mkdirSync(uploadDir, { recursive: true })
+    }
+
+    const uniqueFilename = `image-${Date.now()}-${randomUUID()}${ext}`
+    const filePath = join(__dirname, '../../files', uniqueFilename)
+
+    await new Promise<void>((resolve, reject) => {
+      const writeStream = createWriteStream(filePath)
+      file.file.pipe(writeStream)
+      writeStream.on('finish', resolve)
+      writeStream.on('error', reject)
+    })
+
+    const updateEventDto: UpdateEventDto = { imageUrl: filePath }
+    return this.updateEvent(userId, eventId, updateEventDto)
   }
 
   async deleteEvent(eventId: string, userId: string): Promise<EventDto> {

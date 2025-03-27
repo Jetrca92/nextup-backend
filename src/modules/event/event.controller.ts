@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   ClassSerializerInterceptor,
   Controller,
@@ -6,20 +7,27 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Logger,
   Param,
   Patch,
   Post,
+  Req,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
 import { EventService } from './event.service'
 import { DatabaseService } from 'modules/database/database.service'
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { EventDto } from './dto/event.dto'
 import { AuthGuard } from '@nestjs/passport'
 import { GetCurrentUserById } from 'utils/get-user-by-id.decorator'
 import { CreateEventDto } from './dto/create-event.dto'
 import { UpdateEventDto } from './dto/update-event.dto'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { diskStorage } from 'multer'
+import { extname } from 'path'
+import { FastifyRequest } from 'fastify'
 
 @ApiTags('events')
 @Controller('events')
@@ -27,7 +35,7 @@ export class EventController {
   constructor(
     private readonly eventService: EventService,
     private databaseService: DatabaseService,
-  ) {}
+  ) { }
 
   @ApiOperation({ summary: 'Return list of upcoming events by date ascending' })
   @ApiResponse({ status: 200, description: 'List of upcoming events', type: [EventDto] })
@@ -75,6 +83,34 @@ export class EventController {
   @HttpCode(HttpStatus.CREATED)
   async addEvent(@GetCurrentUserById() userId: string, @Body() eventDto: CreateEventDto): Promise<EventDto> {
     return this.eventService.createEvent(eventDto, userId)
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload event image' })
+  @ApiResponse({ status: 201, description: 'Image successfully uploaded' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 400, description: 'Invalid input data.' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseGuards(AuthGuard('jwt'))
+  @Post('/upload/:id')
+  @HttpCode(HttpStatus.CREATED)
+  async uploadEventImage(
+    @GetCurrentUserById() userId: string,
+    @Param('id') eventId: string,
+    @Req() req: FastifyRequest,
+  ): Promise<EventDto> {
+    return this.eventService.updateEventImage(eventId, userId, req)
   }
 
   @ApiBearerAuth()

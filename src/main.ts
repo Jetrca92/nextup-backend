@@ -3,6 +3,7 @@ import { AppModule } from './modules/app.module'
 import { INestApplication, Logger, ValidationPipe } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
+import fastifyMultipart from '@fastify/multipart'
 
 const initSwagger = (app: INestApplication) => {
   const config = new DocumentBuilder()
@@ -27,7 +28,9 @@ const initValidation = (app: INestApplication) =>
   )
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter())
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), { bodyParser: false })
+
+  await app.register(fastifyMultipart as any)
 
   initSwagger(app)
   initValidation(app)
