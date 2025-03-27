@@ -13,10 +13,14 @@ import * as bcrypt from 'utils/bcrypt'
 import { DatabaseService } from 'modules/database/database.service'
 import { User } from 'models/user.model'
 import { DatabaseCollections } from 'common/constants/firebase-vars.constant'
+import { FastifyRequest } from 'fastify'
+import { extname, join } from 'path'
+import { createWriteStream, existsSync, mkdirSync } from 'fs'
+import { randomUUID } from 'crypto'
 
 @Injectable()
 export class UserService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(private readonly databaseService: DatabaseService) { }
 
   async create(createUserDto: UserRegisterDto): Promise<UserDto> {
     const user = await this.databaseService.findOneByField<User>(
@@ -90,6 +94,34 @@ export class UserService {
       Logger.error(error)
       throw new InternalServerErrorException('Failed to update user.')
     }
+  }
+
+  async updateUserImage(userId: string, req: FastifyRequest) {
+    const file = await req.file()
+    if (!file) throw new BadRequestException('File must be uploaded')
+
+    const ext = extname(file.filename).toLowerCase()
+    if (!['.jpg', '.jpeg', '.png'].includes(ext)) {
+      throw new BadRequestException('Only image files are allowed (jpg, jpeg, png)')
+    }
+
+    const uploadDir = join(__dirname, '../../files') // Adjusted for production
+    if (!existsSync(uploadDir)) {
+      mkdirSync(uploadDir, { recursive: true })
+    }
+
+    const uniqueFilename = `image-${Date.now()}-${randomUUID()}${ext}`
+    const filePath = join(__dirname, '../../files', uniqueFilename)
+
+    await new Promise<void>((resolve, reject) => {
+      const writeStream = createWriteStream(filePath)
+      file.file.pipe(writeStream)
+      writeStream.on('finish', resolve)
+      writeStream.on('error', reject)
+    })
+
+    const updateUserDto: UpdateUserDto = { avatarUrl: filePath }
+    return this.updateUser(userId, updateUserDto)
   }
 
   async updatePassword(id: string, updatePasswordDto: UpdatePasswordDto): Promise<UserDto> {
