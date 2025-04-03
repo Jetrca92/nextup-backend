@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "module": "commonjs",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -12,12 +13,24 @@
     "outDir": "dist",
     "baseUrl": "./src",
     "paths": {
-      "common/*": ["common/*"],
-      "config/*": ["config/*"],
-      "decorators/*": ["decorators/*"],
-      "interfaces/*": ["interfaces/*"],
-      "modules/*": ["modules/*"],
-      "utils/*": ["utils/*"]
+      "common/*": [
+        "common/*"
+      ],
+      "config/*": [
+        "config/*"
+      ],
+      "decorators/*": [
+        "decorators/*"
+      ],
+      "interfaces/*": [
+        "interfaces/*"
+      ],
+      "modules/*": [
+        "modules/*"
+      ],
+      "utils/*": [
+        "utils/*"
+      ]
     },
     "incremental": true,
     "skipLibCheck": true,

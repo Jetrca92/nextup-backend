@@ -4,6 +4,9 @@ import { INestApplication, Logger, ValidationPipe } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
 import fastifyMultipart from '@fastify/multipart'
+import fastifyStatic from '@fastify/static'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 const initSwagger = (app: INestApplication) => {
   const config = new DocumentBuilder()
@@ -28,9 +31,15 @@ const initValidation = (app: INestApplication) =>
   )
 
 async function bootstrap() {
+  Logger.log(__dirname)
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), { bodyParser: false })
 
   await app.register(fastifyMultipart as any)
+
+  app.register(fastifyStatic as any, {
+    root: path.join(__dirname, 'files'),
+    prefix: '/files',
+  })
 
   initSwagger(app)
   initValidation(app)

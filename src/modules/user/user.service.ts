@@ -73,6 +73,7 @@ export class UserService {
     if (updateUserDto.email) updates.email = updateUserDto.email
     if (updateUserDto.firstName) updates.firstName = updateUserDto.firstName
     if (updateUserDto.lastName) updates.lastName = updateUserDto.lastName
+    if (updateUserDto.avatarUrl) updates.avatarUrl = updateUserDto.avatarUrl
 
     if (Object.keys(updates).length === 0) {
       Logger.warn('No fields to update.')
@@ -105,13 +106,13 @@ export class UserService {
       throw new BadRequestException('Only image files are allowed (jpg, jpeg, png)')
     }
 
-    const uploadDir = join(__dirname, '../../files') // Adjusted for production
+    const uploadDir = join(__dirname, '../../files')
     if (!existsSync(uploadDir)) {
       mkdirSync(uploadDir, { recursive: true })
     }
 
     const uniqueFilename = `image-${Date.now()}-${randomUUID()}${ext}`
-    const filePath = join(__dirname, '../../files', uniqueFilename)
+    const filePath = join(uploadDir, uniqueFilename)
 
     await new Promise<void>((resolve, reject) => {
       const writeStream = createWriteStream(filePath)
@@ -120,7 +121,9 @@ export class UserService {
       writeStream.on('error', reject)
     })
 
-    const updateUserDto: UpdateUserDto = { avatarUrl: filePath }
+    const fileUrl = `http://localhost:8080/files/${uniqueFilename}`
+
+    const updateUserDto: UpdateUserDto = { avatarUrl: fileUrl }
     return this.updateUser(userId, updateUserDto)
   }
 
